@@ -12,15 +12,24 @@ from data_exploration import VaccinationsData
 from data_exploration import USCountiesData
 from user_info import UserInfo
 from wit import Wit
-
+from ibm_watson import ToneAnalyzerV3
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 
 CLIENT_ACCESS_TOKEN = config('CLIENT_ACCESS_TOKEN')
 PAGE_ACCESS_TOKEN = config('PAGE_ACCESS_TOKEN')
 VERIFY_TOKEN = config('VERIFY_TOKEN')
 SERVER_ACCESS_TOKEN = config('SERVER_ACCESS_TOKEN')
+IBM_ACCESS_TOKEN = config('IBM_ACCESS_TOKEN')
+IBM_URL = config('IBM_URL')
 
 app = Flask(__name__)
 client = Wit(SERVER_ACCESS_TOKEN)
+authenticator = IAMAuthenticator(IBM_ACCESS_TOKEN)
+tone_analyzer = ToneAnalyzerV3(
+    version='2017-09-21',
+    authenticator=authenticator
+)
+tone_analyzer.set_service_url(IBM_URL)
 
 @app.route('/')
 def hello_world():
@@ -170,14 +179,17 @@ def parse_response(sender_id, resp):
 
 
 def send_message_response(sender_id, message_text):
-		#######
-		# TODO: send message text to sentiment analysis
-		#######
+		tone_analysis = tone_analyzer.tone(
+		    {'text': message_text},
+		    content_type='application/json',
+		    sentences = False
+		).get_result()
 
 		#######
 		#Send message to wit ai
 		#######
 		resp = client.message(message_text)
+		tone = 
 		print("Resp is ", resp)
 
 		# resp = {'text': 'Chicago, Illinois', 'intents': [{'id': '910709439678949', 'name': 'userLocation', 'confidence': 0.9945}], 'entities': {'wit$location:location': [{'id': '193227822570730', 'name': 'wit$location', 'role': 'location', 'start': 0, 'end': 17, 'body': 'Chicago, Illinois', 'confidence': 0.9408, 'entities': [], 'suggested': True, 'value': 'Chicago, Illinois', 'type': 'value'}]}, 'traits': {}}

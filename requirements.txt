@@ -9,3 +9,5 @@ SpeechRecognition
 ffmpeg-python
 pandas
 wit
+ibm_cloud_sdk_core
+ibm_watson
