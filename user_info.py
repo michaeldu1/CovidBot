@@ -13,9 +13,11 @@ class UserInfo:
             
         return user_info
 
-    def update_user(self, location='', age='', sex=''):
-        if location:
-            self.user_info['location'] = location
+    def update_user(self, county='', state='', age='', sex=''):
+        if county:
+            self.user_info['county'] = county
+        if state:
+            self.user_info['state'] = state
         if age:
             self.user_info['age'] = age
         if sex:
@@ -23,20 +25,26 @@ class UserInfo:
 
         with open('user_info.pickle', 'wb') as handle:
             pickle.dump(self.user_info, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    
-    def get_user_location():
-        if 'location' in self.user_info:
-            return self.user_info['location']
+
+    def get_user_state(self):
+        if 'state' in self.user_info:
+            return self.user_info['state']
         
         return ''
 
-    def get_user_age():
+    def get_user_county(self):
+        if 'county' in self.user_info:
+            return self.user_info['county']
+        
+        return ''
+
+    def get_user_age(self):
         if 'age' in self.user_info:
             return self.user_info['age']
         
         return ''
 
-    def get_user_sex():
+    def get_user_sex(self):
         if 'sex' in self.user_info:
             return self.user_info['sex']
         

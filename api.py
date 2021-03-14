@@ -20,7 +20,7 @@ VERIFY_TOKEN = config('VERIFY_TOKEN')
 SERVER_ACCESS_TOKEN = config('SERVER_ACCESS_TOKEN')
 
 app = Flask(__name__)
-client = Win(SERVER_ACCESS_TOKEN)
+client = Wit(SERVER_ACCESS_TOKEN)
 
 @app.route('/')
 def hello_world():
@@ -110,20 +110,62 @@ def init_db(resp):
 	}
 
 def update_user_location(resp):
-	print('resp is ', resp)
-	return 'Dallas, Texas'
+	location = resp['entities']['wit$location:location'][0]['value']
+	print("location is ", location)
+	location = location.split(',')
+	if len(location) > 1:
+		county, state = location
+		user_info.update_user(county=county, state=state)
+	else:
+		county = location[0]
+		user_info.update_user(county=county)
+	
+def update_user_age_sex(resp):
+	age = resp['entities']['wit$number:number'][0]['value']
+	sex = resp['entities']['sex:sex'][0]['value']
 
-def parse_response(resp):
+	user_info.update_user(age=age, sex=sex)
+
+def parse_response(sender_id, resp):
+	vaccine_dataset = VaccinationsData()
+	counties_dataset = USCountiesData('Harris', 'Texas')
+
 	if len(resp['intents']) > 0:
 		intent = resp['intents'][0]['name']
-		if intent in intents_with_slots:
+		print("the intent is ", intent)
+		print(intent == 'userLocation', intent is 'userLocation')
+		if intent == 'userLocation':
+			update_user_location(resp)
+			send_message(sender_id, f"Thanks, one more question. What is your age and sex?")
+		elif intent == 'getAgeSex':
+			update_user_age_sex(resp)
+			send_message(sender_id, f"Awesome thanks! What Covid-19 case and vaccine related questions can I help you with today?")
+		elif intent == 'totalVaccinations':
+			vaccinations = int(vaccine_dataset.get_total_vaccinations())
+			vaccinations = "{:,}".format(vaccinations)
 
-		else: 
-		db = init_db(resp)
+			send_message(sender_id, f"Currently, there have been {vaccinations} total vaccinations in the US")
+		elif intent == 'totalCases':
+			cumulative_cases = counties_dataset.get_cumulative_cases()
+			cumulative_cases = "{:,}".format(cumulative_cases)
+			daily_cases = counties_dataset.get_daily_cases()
+			daily_cases = "{:,}".format(daily_cases)
 
-		return db[intent]
+			send_message(sender_id, f"In the US there are 3.62M total cases. In your area, there have been {cumulative_cases} total cases and {daily_cases} cases per day.")
+		elif intent == 'precautions':
+			# Insert hardcoded precautions here 
+			send_message(sender_id, f"precautions")
+		elif intent == 'symptoms':
+			# Insert hardcoded symptoms here 
+			send_message(sender_id, f"symptoms")
+		elif intent == 'finishCat':
+			# Insert hardcoded precautions here 
+			send_message(sender_id, f"Thanks so much for chatting today! I hope I could've been of some help. To help us out, it'd be great to know how helpful this was on a scale of 1-5!")
+		else:
+			db = init_db(resp)
+			return db[intent]
 	else:
-		send_message(sender_id, f"Hello, you said: {message_text}")
+		send_message(sender_id, f"Hello, thanks for reaching out! To get started, this experience will be much better if I can get some information from you. What county and state are you currently in right now?")
 
 
 
@@ -136,12 +178,13 @@ def send_message_response(sender_id, message_text):
 		#Send message to wit ai
 		#######
 		resp = client.message(message_text)
+		print("Resp is ", resp)
 
 		# resp = {'text': 'Chicago, Illinois', 'intents': [{'id': '910709439678949', 'name': 'userLocation', 'confidence': 0.9945}], 'entities': {'wit$location:location': [{'id': '193227822570730', 'name': 'wit$location', 'role': 'location', 'start': 0, 'end': 17, 'body': 'Chicago, Illinois', 'confidence': 0.9408, 'entities': [], 'suggested': True, 'value': 'Chicago, Illinois', 'type': 'value'}]}, 'traits': {}}
 		# resp = {'text': 'how many people have been vaccinated?', 'intents': [{'id': '880965962687968', 'name': 'totalVaccinations', 'confidence': 0.9983}], 'entities': {'wit$age_of_person:age_of_person': [{'id': '810205969703877', 'name': 'wit$age_of_person', 'role': 'age_of_person', 'start': 4, 'end': 37, 'body': 'many people have been vaccinated?', 'confidence': 0.8855, 'entities': [], 'suggested': True, 'value': 'many people have been vaccinated?', 'type': 'value'}]}, 'traits': {}}
-		parse_response(resp)
+		parse_response(sender_id, resp)
 
-		send_message(sender_id, f"Hello, you said: {message_text}")
+		# send_message(sender_id, f"Hello, you said: {message_text}")
 
 if __name__ == "__main__":
 	user_info = UserInfo()

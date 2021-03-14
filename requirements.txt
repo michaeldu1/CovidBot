@@ -8,3 +8,4 @@ pickle5
 SpeechRecognition
 ffmpeg-python
 pandas
+wit
