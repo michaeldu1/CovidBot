@@ -184,6 +184,9 @@ def send_message_response(sender_id, message_text):
 		    content_type='application/json',
 		    sentences = False
 		).get_result()
+		
+		#Example response: {'document_tone': {'tones': [{'score': 0.958553, 'tone_id': 'anger', 'tone_name': 'Anger'}]}}
+		#Possible tone_ids: anger, fear, joy, and sadness, analytical, confident, and tentative
 
 		#######
 		#Send message to wit ai
