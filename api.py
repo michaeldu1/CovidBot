@@ -111,10 +111,17 @@ def update_user_location(resp):
 	return 'Dallas, Texas'
 
 def parse_response(resp):
-	intent = resp['intents'][0]['name']
-	db = init_db(resp)
+	if len(resp['intents']) > 0:
+		intent = resp['intents'][0]['name']
+		if intent in intents_with_slots:
 
-	return db[intent]
+		else: 
+		db = init_db(resp)
+
+		return db[intent]
+	else:
+		send_message(sender_id, f"Hello, you said: {message_text}")
+
 
 
 def send_message_response(sender_id, message_text):
