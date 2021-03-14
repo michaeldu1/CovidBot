@@ -4,6 +4,14 @@ from flask import Flask, request
 import os 
 from decouple import config
 import json
+import pickle5 as pickle
+import urllib.request
+import speech_recognition as sr
+import ffmpeg
+from data_exploration import VaccinationsData
+from data_exploration import USCountiesData
+from user_info import UserInfo
+
 
 CLIENT_ACCESS_TOKEN = config('CLIENT_ACCESS_TOKEN')
 PAGE_ACCESS_TOKEN = config('PAGE_ACCESS_TOKEN')
@@ -33,14 +41,27 @@ def handle_message():
 		'''
 				
 		data = request.get_json()
+		print("data is ",data)
 		if data["object"] == "page":
 				for entry in data["entry"]:
 						for messaging_event in entry["messaging"]:
 								if messaging_event.get("message"):  
 										sender_id = messaging_event["sender"]["id"]        
 										recipient_id = messaging_event["recipient"]["id"] 
-										message_text = messaging_event["message"]["text"]  
-										send_message_response(sender_id, message_text) 
+										message_text = messaging_event["message"]
+										if 'attachments' in message_text:
+											if message_text['attachments'][0]['type'] == 'audio':
+												video_url = message_text['attachments'][0]['payload']['url']
+												print("video url is ", video_url)
+												if os.path.exists('speech.mp4'):
+													os.remove('speech.mp4') 
+												saved = urllib.request.urlretrieve(video_url, 'speech.mp4') 
+												print("saved is ", saved)
+												speech_transcript = convert_audio_to_text()
+												send_message_response(sender_id, speech_transcript)
+
+										else:
+											send_message_response(sender_id, message_text["text"]) 
 
 		return "ok"
 
@@ -60,6 +81,41 @@ def send_message(sender_id, message_text):
         "message": {"text": message_text}
     }))
 
+def convert_audio_to_text():
+	if os.path.exists('speech.mp3'):
+		os.remove('speech.mp3') 
+	if os.path.exists('speech.wav'):
+		os.remove('speech.wav')
+	command2mp3 = "ffmpeg -i speech.mp4 speech.mp3"
+	command2wav = "ffmpeg -i speech.mp3 speech.wav"
+	os.system(command2mp3)
+	os.system(command2wav)
+
+	r = sr.Recognizer()
+	with sr.AudioFile('speech.wav') as source:
+		audio = r.record(source, duration=120) 
+	print("speech is ", r.recognize_google(audio))
+	return r.recognize_google(audio)
+
+def init_db(resp):
+	vaccine_dataset = VaccinationsData()
+	counties_dataset = USCountiesData('Harris', 'Texas')
+
+	return {
+		'userLocation': update_user_location(resp),
+		'totalVaccinations': vaccine_dataset.get_total_vaccinations(),
+	}
+
+def update_user_location(resp):
+	print('resp is ', resp)
+	return 'Dallas, Texas'
+
+def parse_response(resp):
+	intent = resp['intents'][0]['name']
+	db = init_db(resp)
+
+	return db[intent]
+
 
 def send_message_response(sender_id, message_text):
 		#######
@@ -70,12 +126,13 @@ def send_message_response(sender_id, message_text):
 		# TODO: Send message to wit ai
 		#######
 
-		######
-		# TODO: Query database based on witai response
-		######
 
-		# Return message to messenger UI
-    send_message(sender_id, "hello!")
+		resp = {'text': 'Chicago, Illinois', 'intents': [{'id': '910709439678949', 'name': 'userLocation', 'confidence': 0.9945}], 'entities': {'wit$location:location': [{'id': '193227822570730', 'name': 'wit$location', 'role': 'location', 'start': 0, 'end': 17, 'body': 'Chicago, Illinois', 'confidence': 0.9408, 'entities': [], 'suggested': True, 'value': 'Chicago, Illinois', 'type': 'value'}]}, 'traits': {}}
+		# resp = {'text': 'how many people have been vaccinated?', 'intents': [{'id': '880965962687968', 'name': 'totalVaccinations', 'confidence': 0.9983}], 'entities': {'wit$age_of_person:age_of_person': [{'id': '810205969703877', 'name': 'wit$age_of_person', 'role': 'age_of_person', 'start': 4, 'end': 37, 'body': 'many people have been vaccinated?', 'confidence': 0.8855, 'entities': [], 'suggested': True, 'value': 'many people have been vaccinated?', 'type': 'value'}]}, 'traits': {}}
+		parse_response(resp)
+
+		send_message(sender_id, f"Hello, you said: {message_text}")
 
 if __name__ == "__main__":
-		app.run(threaded=True, port=5000)
+	user_info = UserInfo()
+	app.run(threaded=True, port=5000)

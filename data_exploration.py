@@ -35,7 +35,7 @@ class USData:
         self.country_dataset = pd.read_csv('data/USData/us_covid19_daily.csv')
         self.county_data = self.counties_dataset.loc[self.counties_dataset['county'] == county]
 
-class USCounties:
+class USCountiesData:
     def __init__(self, county, state):
         self.dataset = pd.read_csv('data/us-counties.csv')
         self.county_data = self.dataset.loc[(self.dataset['county'] == county) & (self.dataset['state'] == state)]
@@ -43,9 +43,6 @@ class USCounties:
     def get_cases_trend(self):
         previous = self.county_data.iloc[-1]['cases'] - self.county_data.iloc[-30]['cases']
         print(previous)
-
-    # def get_deaths_trend(self):
-
 
 
     def get_daily_cases(self):

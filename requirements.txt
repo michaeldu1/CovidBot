@@ -4,3 +4,6 @@ pyowm==2.0.0
 apiai==1.2.3
 credentials
 python-decouple
+pickle5
+SpeechRecognition
+ffmpeg-python
