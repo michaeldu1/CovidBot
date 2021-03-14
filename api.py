@@ -11,13 +11,16 @@ import ffmpeg
 from data_exploration import VaccinationsData
 from data_exploration import USCountiesData
 from user_info import UserInfo
+from wit import Wit
 
 
 CLIENT_ACCESS_TOKEN = config('CLIENT_ACCESS_TOKEN')
 PAGE_ACCESS_TOKEN = config('PAGE_ACCESS_TOKEN')
 VERIFY_TOKEN = config('VERIFY_TOKEN')
+SERVER_ACCESS_TOKEN = config('SERVER_ACCESS_TOKEN')
 
 app = Flask(__name__)
+client = Win(SERVER_ACCESS_TOKEN)
 
 @app.route('/')
 def hello_world():
@@ -130,11 +133,11 @@ def send_message_response(sender_id, message_text):
 		#######
 
 		#######
-		# TODO: Send message to wit ai
+		#Send message to wit ai
 		#######
+		resp = client.message(message_text)
 
-
-		resp = {'text': 'Chicago, Illinois', 'intents': [{'id': '910709439678949', 'name': 'userLocation', 'confidence': 0.9945}], 'entities': {'wit$location:location': [{'id': '193227822570730', 'name': 'wit$location', 'role': 'location', 'start': 0, 'end': 17, 'body': 'Chicago, Illinois', 'confidence': 0.9408, 'entities': [], 'suggested': True, 'value': 'Chicago, Illinois', 'type': 'value'}]}, 'traits': {}}
+		# resp = {'text': 'Chicago, Illinois', 'intents': [{'id': '910709439678949', 'name': 'userLocation', 'confidence': 0.9945}], 'entities': {'wit$location:location': [{'id': '193227822570730', 'name': 'wit$location', 'role': 'location', 'start': 0, 'end': 17, 'body': 'Chicago, Illinois', 'confidence': 0.9408, 'entities': [], 'suggested': True, 'value': 'Chicago, Illinois', 'type': 'value'}]}, 'traits': {}}
 		# resp = {'text': 'how many people have been vaccinated?', 'intents': [{'id': '880965962687968', 'name': 'totalVaccinations', 'confidence': 0.9983}], 'entities': {'wit$age_of_person:age_of_person': [{'id': '810205969703877', 'name': 'wit$age_of_person', 'role': 'age_of_person', 'start': 4, 'end': 37, 'body': 'many people have been vaccinated?', 'confidence': 0.8855, 'entities': [], 'suggested': True, 'value': 'many people have been vaccinated?', 'type': 'value'}]}, 'traits': {}}
 		parse_response(resp)
 
