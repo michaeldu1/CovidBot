@@ -189,7 +189,6 @@ def send_message_response(sender_id, message_text):
 		#Send message to wit ai
 		#######
 		resp = client.message(message_text)
-		tone = 
 		print("Resp is ", resp)
 
 		# resp = {'text': 'Chicago, Illinois', 'intents': [{'id': '910709439678949', 'name': 'userLocation', 'confidence': 0.9945}], 'entities': {'wit$location:location': [{'id': '193227822570730', 'name': 'wit$location', 'role': 'location', 'start': 0, 'end': 17, 'body': 'Chicago, Illinois', 'confidence': 0.9408, 'entities': [], 'suggested': True, 'value': 'Chicago, Illinois', 'type': 'value'}]}, 'traits': {}}
